@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+/* Base layer to extend Tailwind defaults */
+@layer base {
+  :root {
+    --font-sans: "Inter", system-ui, sans-serif;
+    --font-display: "Urbanist", "Poppins", sans-serif;
+    --color-bg: #f8fafc; /* Very light blue-gray */
+    --color-text: #0f172a; /* Slate-900 */
+    --color-muted: #64748b; /* Slate-500 */
+  }
+
+  html {
+    font-family: var(--font-sans);
+    background-color: var(--color-bg);
+    color: var(--color-text);
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Headings */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--color-text);
+  }
+
+  /* Anchor tags */
+  a {
+    color: #3b82f6; /* Tailwind's blue-500 */
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+
+  /* Buttons */
+  button {
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  /* Form elements */
+  input,
+  select,
+  textarea {
+    font-family: inherit;
+    color: var(--color-text);
+    background-color: white;
+  }
+}

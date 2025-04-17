@@ -1,12 +1,20 @@
+import Footer from "./components/layouts/Footer";
+import Header from "./components/layouts/Header";
+import { ThemeProvider } from "./context/theme-provider";
+import AppRoutes from "./routes/AppRoutes";
+import "./styles/globals.css";
+
 function App() {
   return (
-    <>
-      <div>
-        <h1 className="text-3xl font-bold underline flex justify-center mt-40">
-          Hello From Fraud
-        </h1>
+    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+      <div className="flex min-h-screen flex-col">
+        <Header />
+        <main className="flex-1">
+          <AppRoutes />
+        </main>
+        <Footer />
       </div>
-    </>
+    </ThemeProvider>
   );
 }
 
