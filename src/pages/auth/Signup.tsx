@@ -1,98 +1,216 @@
+import type React from "react";
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from "../../components/ui/card";
 
 function Signup() {
   const [form, setForm] = useState({
     username: "",
     email: "",
     password: "",
+    confirmPassword: "",
     phone: "",
   });
+  const [errors, setErrors] = useState<{
+    username?: string;
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+    phone?: string;
+  }>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const { signup } = useAuth();
+  const navigate = useNavigate();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    // Clear error when user types
+    if (errors[e.target.name as keyof typeof errors]) {
+      setErrors({ ...errors, [e.target.name]: undefined });
+    }
+  };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validateForm = () => {
+    const newErrors: {
+      username?: string;
+      email?: string;
+      password?: string;
+      confirmPassword?: string;
+      phone?: string;
+    } = {};
+
+    if (!form.username.trim()) {
+      newErrors.username = "Username is required";
+    }
+
+    if (!form.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(form.email)) {
+      newErrors.email = "Email is invalid";
+    }
+
+    if (!form.password) {
+      newErrors.password = "Password is required";
+    } else if (form.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    if (form.password !== form.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
+
+    if (!form.phone.trim()) {
+      newErrors.phone = "Phone number is required";
+    } else if (!/^\+?[0-9\s\-()]+$/.test(form.phone)) {
+      newErrors.phone = "Phone number is invalid";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle signup logic here
+    if (!validateForm()) return;
+
+    setIsLoading(true);
+    try {
+      await signup(form.username, form.email, form.password, form.phone);
+      navigate("/dashboard");
+    } catch (error) {
+      setErrors({
+        ...errors,
+        username: "An error occurred during signup",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <section className="flex items-center justify-center py-20 px-4 bg-gray-50">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white shadow-lg rounded-lg px-8 pt-6 pb-8 w-full max-w-lg"
-      >
-        <h2 className="text-2xl font-semibold text-center text-blue-700 mb-6">
-          Create an Account
-        </h2>
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2" htmlFor="username">
-            Username
-          </label>
-          <input
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            id="username"
-            type="text"
-            name="username"
-            value={form.username}
-            onChange={handleChange}
-            required
-            placeholder="Your username"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2" htmlFor="email">
-            Email
-          </label>
-          <input
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            id="email"
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            required
-            placeholder="you@example.com"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2" htmlFor="password">
-            Password
-          </label>
-          <input
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            id="password"
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            required
-            placeholder="••••••••"
-          />
-        </div>
-        <div className="mb-6">
-          <label className="block text-gray-700 mb-2" htmlFor="phone">
-            Phone
-          </label>
-          <input
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            id="phone"
-            type="tel"
-            name="phone"
-            value={form.phone}
-            onChange={handleChange}
-            required
-            placeholder="+1 234 567 890"
-          />
-        </div>
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          Sign Up
-        </button>
-      </form>
-    </section>
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-center text-2xl font-bold text-blue-700">
+            Create an Account
+          </CardTitle>
+          <CardDescription className="text-center">
+            Enter your details to create your account
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              label="Username"
+              id="username"
+              type="text"
+              name="username"
+              value={form.username}
+              onChange={handleChange}
+              error={errors.username}
+              placeholder="Your username"
+              autoComplete="username"
+            />
+            <Input
+              label="Email"
+              id="email"
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              error={errors.email}
+              placeholder="you@example.com"
+              autoComplete="email"
+            />
+            <Input
+              label="Password"
+              id="password"
+              type="password"
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              error={errors.password}
+              placeholder="••••••••"
+              autoComplete="new-password"
+            />
+            <Input
+              label="Confirm Password"
+              id="confirmPassword"
+              type="password"
+              name="confirmPassword"
+              value={form.confirmPassword}
+              onChange={handleChange}
+              error={errors.confirmPassword}
+              placeholder="••••••••"
+              autoComplete="new-password"
+            />
+            <Input
+              label="Phone"
+              id="phone"
+              type="tel"
+              name="phone"
+              value={form.phone}
+              onChange={handleChange}
+              error={errors.phone}
+              placeholder="+1 234 567 890"
+              autoComplete="tel"
+            />
+            <div className="flex items-center">
+              <input
+                id="terms"
+                name="terms"
+                type="checkbox"
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                required
+              />
+              <label
+                htmlFor="terms"
+                className="ml-2 block text-sm text-gray-700"
+              >
+                I agree to the{" "}
+                <a
+                  href="#"
+                  className="font-medium text-blue-600 hover:text-blue-500"
+                >
+                  Terms of Service
+                </a>{" "}
+                and{" "}
+                <a
+                  href="#"
+                  className="font-medium text-blue-600 hover:text-blue-500"
+                >
+                  Privacy Policy
+                </a>
+              </label>
+            </div>
+            <Button type="submit" className="w-full" isLoading={isLoading}>
+              Sign Up
+            </Button>
+          </form>
+        </CardContent>
+        <CardFooter className="flex flex-col space-y-4">
+          <div className="text-center text-sm">
+            Already have an account?{" "}
+            <Link
+              to="/auth/login"
+              className="font-medium text-blue-600 hover:text-blue-500"
+            >
+              Sign in
+            </Link>
+          </div>
+        </CardFooter>
+      </Card>
+    </div>
   );
 }
 

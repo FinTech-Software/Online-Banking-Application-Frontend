@@ -1,63 +1,145 @@
+import type React from "react";
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from "../../components/ui/card";
 
 function Login() {
   const [form, setForm] = useState({ username: "", password: "" });
+  const [errors, setErrors] = useState<{
+    username?: string;
+    password?: string;
+  }>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    // Clear error when user types
+    if (errors[e.target.name as keyof typeof errors]) {
+      setErrors({ ...errors, [e.target.name]: undefined });
+    }
+  };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validateForm = () => {
+    const newErrors: { username?: string; password?: string } = {};
+    if (!form.username.trim()) {
+      newErrors.username = "Username is required";
+    }
+    if (!form.password) {
+      newErrors.password = "Password is required";
+    } else if (form.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic here
+    if (!validateForm()) return;
+
+    setIsLoading(true);
+    try {
+      await login(form.username, form.password);
+      navigate("/dashboard");
+    } catch (error) {
+      setErrors({
+        username: "Invalid username or password",
+        password: "Invalid username or password",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <section className="flex items-center justify-center py-20 px-4 bg-gray-50">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white shadow-lg rounded-lg px-8 pt-6 pb-8 w-full max-w-lg"
-      >
-        <h2 className="text-2xl font-semibold text-center text-blue-700 mb-6">
-          Login to Your Account
-        </h2>
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2" htmlFor="username">
-            Username
-          </label>
-          <input
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            id="username"
-            type="text"
-            name="username"
-            value={form.username}
-            onChange={handleChange}
-            required
-            placeholder="yourName"
-          />
-        </div>
-        <div className="mb-6">
-          <label className="block text-gray-700 mb-2" htmlFor="password">
-            Password
-          </label>
-          <input
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            id="password"
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            required
-            placeholder="••••••••"
-          />
-        </div>
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          Login
-        </button>
-      </form>
-    </section>
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-center text-2xl font-bold text-blue-700">
+            Welcome Back
+          </CardTitle>
+          <CardDescription className="text-center">
+            Enter your credentials to access your account
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              label="Username"
+              id="username"
+              type="text"
+              name="username"
+              value={form.username}
+              onChange={handleChange}
+              error={errors.username}
+              placeholder="yourName"
+              autoComplete="username"
+            />
+            <Input
+              label="Password"
+              id="password"
+              type="password"
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              error={errors.password}
+              placeholder="••••••••"
+              autoComplete="current-password"
+            />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <label
+                  htmlFor="remember-me"
+                  className="ml-2 block text-sm text-gray-700"
+                >
+                  Remember me
+                </label>
+              </div>
+              <div className="text-sm">
+                <a
+                  href="#"
+                  className="font-medium text-blue-600 hover:text-blue-500"
+                >
+                  Forgot your password?
+                </a>
+              </div>
+            </div>
+            <Button type="submit" className="w-full" isLoading={isLoading}>
+              Sign in
+            </Button>
+          </form>
+        </CardContent>
+        <CardFooter className="flex flex-col space-y-4">
+          <div className="text-center text-sm">
+            Don't have an account?{" "}
+            <Link
+              to="/auth/signup"
+              className="font-medium text-blue-600 hover:text-blue-500"
+            >
+              Sign up
+            </Link>
+          </div>
+        </CardFooter>
+      </Card>
+    </div>
   );
 }
 

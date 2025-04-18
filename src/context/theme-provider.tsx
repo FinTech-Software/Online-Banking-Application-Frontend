@@ -1,4 +1,6 @@
-import { createContext, useState, useEffect, ReactNode } from "react";
+"use client";
+
+import { createContext, useState, useEffect, type ReactNode } from "react";
 
 interface ThemeContextType {
   theme: string;
