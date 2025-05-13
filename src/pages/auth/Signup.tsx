@@ -12,7 +12,6 @@ import {
   CardDescription,
   CardFooter,
 } from "../../components/ui/card";
-import axios from "axios";
 
 function Signup() {
   const [form, setForm] = useState({
@@ -87,7 +86,12 @@ function Signup() {
     setIsLoading(true);
     try {
       await signup(form.username, form.email, form.password, form.phone);
-      navigate("/dashboard");
+      navigate("/auth/login", {
+        state: {
+          successMessage:
+            "You've successfully signed up! Now login to use the banking application.",
+        },
+      });
     } catch (error) {
       setErrors({
         ...errors,

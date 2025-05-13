@@ -12,8 +12,11 @@ import {
   CardDescription,
   CardFooter,
 } from "../../components/ui/card";
+import { useLocation } from "react-router-dom";
 
 function Login() {
+  const location = useLocation();
+  const successMessage = location.state?.successMessage;
   const [form, setForm] = useState({ username: "", password: "" });
   const [errors, setErrors] = useState<{
     username?: string;
@@ -70,6 +73,11 @@ function Login() {
           <CardTitle className="text-center text-2xl font-bold text-blue-700">
             Welcome Back
           </CardTitle>
+          {successMessage && (
+            <div className="text-green-600 text-sm text-center mb-4">
+              {successMessage}
+            </div>
+          )}
           <CardDescription className="text-center">
             Enter your credentials to access your account
           </CardDescription>

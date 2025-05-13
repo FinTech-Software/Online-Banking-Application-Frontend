@@ -1,7 +1,7 @@
 import {
   createContext,
   useState,
-  // useEffect,
+  useEffect,
   useContext,
   type ReactNode,
 } from "react";
@@ -21,33 +21,32 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // useEffect(() => {
-  //   const validateToken = async () => {
-  //     const storedUser = localStorage.getItem("bankapp_user");
-  //     if (!storedUser) {
-  //       setIsLoading(false);
-  //       return;
-  //     }
+  useEffect(() => {
+    const validateToken = async () => {
+      const storedUser = localStorage.getItem("bankapp_user");
+      if (!storedUser) {
+        setIsLoading(false);
+        return;
+      }
 
-  //     try {
-  //       const userData: UserData = JSON.parse(storedUser);
-  //       // Verify token with backend
-  //       await axios.get("http://localhost:8080/v1/auth/validate", {
-  //         headers: {
-  //           Authorization: `Bearer ${userData.token}`,
-  //         },
-  //       });
-  //       setUser(userData);
-  //     } catch (error) {
-  //       console.error("Token validation failed:", error);
-  //       localStorage.removeItem("bankapp_user");
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
+      try {
+        const userData: UserData = JSON.parse(storedUser);
 
-  //   validateToken();
-  // }, []);
+        await axios.post("http://localhost:8080/v1/auth/validateToken", {
+          token: userData.token,
+        });
+
+        setUser(userData);
+      } catch (error) {
+        console.error("Token validation failed:", error);
+        localStorage.removeItem("bankapp_user");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    validateToken();
+  }, []);
 
   const login = async (
     username: string,
@@ -108,12 +107,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         password,
         phone,
       });
+
       console.log(res.data.message);
-      // Auto-login after signup
-      await login(username, password);
+      return res.data.message;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        const errorMessage = error.response?.data?.message || "Signup failed";
+        const errorMessage =
+          error.response?.data?.message || "Signup failed. Please try again.";
         if (error.response?.status === 409) {
           throw new Error("Username or email already exists");
         }
