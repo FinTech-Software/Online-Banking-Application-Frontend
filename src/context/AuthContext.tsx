@@ -1,11 +1,13 @@
 import {
   createContext,
   useState,
-  useEffect,
+  // useEffect,
   useContext,
   type ReactNode,
 } from "react";
-import type { User, AuthContextType } from "@/types";
+import type { AuthContextType, UserData, DecodedToken } from "@/types";
+import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 
 export const AuthContext = createContext<AuthContextType | undefined>(
   undefined
@@ -16,38 +18,77 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Check if user is logged in from localStorage
-    const storedUser = localStorage.getItem("bankapp_user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
-  }, []);
+  // useEffect(() => {
+  //   const validateToken = async () => {
+  //     const storedUser = localStorage.getItem("bankapp_user");
+  //     if (!storedUser) {
+  //       setIsLoading(false);
+  //       return;
+  //     }
 
-  const login = async (username: string, password: string) => {
+  //     try {
+  //       const userData: UserData = JSON.parse(storedUser);
+  //       // Verify token with backend
+  //       await axios.get("http://localhost:8080/v1/auth/validate", {
+  //         headers: {
+  //           Authorization: `Bearer ${userData.token}`,
+  //         },
+  //       });
+  //       setUser(userData);
+  //     } catch (error) {
+  //       console.error("Token validation failed:", error);
+  //       localStorage.removeItem("bankapp_user");
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
+
+  //   validateToken();
+  // }, []);
+
+  const login = async (
+    username: string,
+    password: string
+  ): Promise<UserData> => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const res = await axios.post(
+        "http://localhost:8080/v1/auth/login",
+        { username, password },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
+      );
 
-      // Mock user data
-      const userData: User = {
-        id: "user-123",
-        username,
-        email: `${username}@example.com`,
-        firstName: "John",
-        lastName: "Doe",
+      const token = res.data.token;
+
+      //Decoding the username from the token
+      const decoded: DecodedToken = jwtDecode(token);
+      const extracted_username = decoded.username || decoded.sub || "";
+
+      const userData: UserData = {
+        token: res.data.token,
+        username: extracted_username,
       };
 
-      setUser(userData);
       localStorage.setItem("bankapp_user", JSON.stringify(userData));
+      setUser(userData);
+      return userData;
     } catch (error) {
-      console.error("Login failed:", error);
-      throw error;
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data?.message || "Login failed";
+        if (error.response?.status === 401) {
+          throw new Error("Invalid username or password");
+        }
+        throw new Error(errorMessage);
+      }
+      throw new Error("Network error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -61,23 +102,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
   ) => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Mock user data
-      const userData: User = {
-        id: "user-" + Math.random().toString(36).substr(2, 9),
+      const res = await axios.post("http://localhost:8080/v1/auth/signup", {
         username,
         email,
-        firstName: "",
-        lastName: "",
-      };
-
-      setUser(userData);
-      localStorage.setItem("bankapp_user", JSON.stringify(userData));
+        password,
+        phone,
+      });
+      console.log(res.data.message);
+      // Auto-login after signup
+      await login(username, password);
     } catch (error) {
-      console.error("Signup failed:", error);
-      throw error;
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data?.message || "Signup failed";
+        if (error.response?.status === 409) {
+          throw new Error("Username or email already exists");
+        }
+        throw new Error(errorMessage);
+      }
+      throw new Error("Network error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -86,12 +128,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem("bankapp_user");
+    // Optional: Call backend logout endpoint if needed
   };
 
   return (
     <AuthContext.Provider
       value={{
-        user,
+        // user,
         isAuthenticated: !!user,
         isLoading,
         login,

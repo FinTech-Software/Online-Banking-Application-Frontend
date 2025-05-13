@@ -12,6 +12,7 @@ import {
   CardDescription,
   CardFooter,
 } from "../../components/ui/card";
+import axios from "axios";
 
 function Signup() {
   const [form, setForm] = useState({
