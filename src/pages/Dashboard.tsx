@@ -1,27 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DashboardLayout } from "../components/layouts/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TransactionItem } from "@/components/ui/transaction-item";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-
-// Mock data
-const accounts = [
-  {
-    id: "acc1",
-    name: "Main Account",
-    balance: 5280.42,
-    currency: "USD",
-    accountNumber: "**** 1234",
-  },
-  {
-    id: "acc2",
-    name: "Savings",
-    balance: 12750.89,
-    currency: "USD",
-    accountNumber: "**** 5678",
-  },
-];
+import axios from "axios";
+import { Account } from "@/types";
+import { Navigate } from "react-router-dom";
 
 const recentTransactions = [
   {
@@ -54,13 +39,47 @@ const recentTransactions = [
 ];
 
 function Dashboard() {
-  const [activeAccount, setActiveAccount] = useState(accounts[0]);
+  const [userDetails, setUserDetails] = useState<Account | null>(null);
+  const user = JSON.parse(localStorage.getItem("bankapp_user") ?? "{}") as {
+    username?: string;
+    token?: string;
+  };
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      if (!user.username || !user.token) {
+        return <Navigate to="/auth/login" replace />;
+      }
+      try {
+        const res = await axios.post<Account>(
+          "http://localhost:8080/v1/user/getUserDetails",
+          { username: user.username },
+          {
+            headers: {
+              Authorization: `Bearer ${user.token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        setUserDetails(res.data);
+      } catch (error) {
+        console.error("Failed to fetch user details:", error);
+      }
+    };
+    fetchUserDetails();
+  }, [user.username, user.token]);
+
+  if (!userDetails) {
+    return <p>Loading user details...</p>;
+  }
 
   return (
     <DashboardLayout>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600">Welcome back, John Doe</p>
+        <p className="text-gray-600">
+          Welcome back <strong>{userDetails.username}</strong>
+        </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -71,34 +90,21 @@ function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {accounts.map((account) => (
-                <div
-                  key={account.id}
-                  className={`cursor-pointer rounded-lg border p-4 transition-colors ${
-                    activeAccount.id === account.id
-                      ? "border-blue-500 bg-blue-50"
-                      : "hover:bg-gray-50"
-                  }`}
-                  onClick={() => setActiveAccount(account)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">{account.name}</p>
-                      <p className="text-sm text-gray-500">
-                        {account.accountNumber}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold">
-                        {new Intl.NumberFormat("en-US", {
-                          style: "currency",
-                          currency: account.currency,
-                        }).format(account.balance)}
-                      </p>
-                    </div>
+              <div
+                className={
+                  "cursor-pointer rounded-lg border p-4 transition-colorsborder-blue-500 bg-blue-50"
+                }
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">{userDetails.username}</p>
+                    <p className="text-sm text-gray-500">{userDetails.email}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-bold">₹{userDetails.balance}</p>
                   </div>
                 </div>
-              ))}
+              </div>
             </div>
           </CardContent>
         </Card>

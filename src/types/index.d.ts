@@ -62,10 +62,9 @@ export interface Transaction {
 // Account types
 export interface Account {
   id: string;
-  name: string;
+  username: string;
+  email: string;
   balance: number;
-  currency: string;
-  accountNumber: string;
 }
 
 // Recipient types
