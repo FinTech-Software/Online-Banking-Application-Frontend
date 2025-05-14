@@ -3,10 +3,10 @@ import { DashboardLayout } from "../components/layouts/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TransactionItem } from "@/components/ui/transaction-item";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Account } from "@/types";
-import { Navigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 const recentTransactions = [
   {
@@ -39,24 +39,32 @@ const recentTransactions = [
 ];
 
 function Dashboard() {
+  const { user, isAuthenticated, isLoading } = useAuth();
   const [userDetails, setUserDetails] = useState<Account | null>(null);
-  const user = JSON.parse(localStorage.getItem("bankapp_user") ?? "{}") as {
-    username?: string;
-    token?: string;
-  };
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // If not authenticated and not loading, redirect to login
+    if (!isAuthenticated && !isLoading) {
+      navigate("/login");
+    }
+  }, [isAuthenticated, isLoading, navigate]);
 
   useEffect(() => {
     const fetchUserDetails = async () => {
-      if (!user.username || !user.token) {
-        return <Navigate to="/auth/login" replace />;
-      }
+      const stored = localStorage.getItem("bankapp_user");
+      const parsed = stored ? JSON.parse(stored) : null;
+      const token = parsed?.token;
+
+      if (!user?.username || !token) return;
+
       try {
         const res = await axios.post<Account>(
           "http://localhost:8080/v1/user/getUserDetails",
           { username: user.username },
           {
             headers: {
-              Authorization: `Bearer ${user.token}`,
+              Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
           }
@@ -66,11 +74,40 @@ function Dashboard() {
         console.error("Failed to fetch user details:", error);
       }
     };
-    fetchUserDetails();
-  }, [user.username, user.token]);
 
-  if (!userDetails) {
-    return <p>Loading user details...</p>;
+    fetchUserDetails();
+  }, [user]);
+
+  if (isLoading || !userDetails) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="flex flex-col items-center space-y-6">
+          <p className="text-xl font-medium text-gray-600">
+            Loading user details...
+          </p>
+          <svg
+            className="w-12 h-12 text-blue-500 animate-spin"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+            />
+          </svg>
+        </div>
+      </div>
+    );
   }
 
   return (

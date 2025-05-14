@@ -14,71 +14,105 @@ import {
 } from "../ui/sidebar";
 import Header from "./Header";
 import Footer from "./Footer";
+import { useNavigate } from "react-router-dom";
 
 interface DashboardLayoutProps {
   children: ReactNode;
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
+  const navigate = useNavigate();
+
+  const goTo = (path: string) => () => navigate(path);
+
+  const logout = () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    navigate("/login");
+  };
+
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen bg-gray-50">
+      <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
         <Sidebar>
           <SidebarHeader>
-            <h2 className="text-xl font-bold text-blue-600">BankApp</h2>
+            <h2 className="text-xl font-bold text-blue-600 dark:text-blue-400">
+              BankApp
+            </h2>
           </SidebarHeader>
-          <SidebarContent>
+
+          {/* Sidebar Container */}
+          <div className="m-4 rounded-2xl bg-white p-4 shadow-md dark:bg-gray-900 dark:shadow-lg space-y-6">
+            {/* Main Navigation */}
             <SidebarGroup>
               <SidebarGroupLabel>Main</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton
-                      asChild
-                      isActive={window.location.pathname === "/dashboard"}
+                      className="w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900 dark:hover:text-white"
+                      onClick={goTo("/dashboard")}
                     >
-                      <a href="/dashboard">Dashboard</a>
+                      Dashboard
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton
-                      asChild
-                      isActive={window.location.pathname === "/transactions"}
+                      className="w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900 dark:hover:text-white"
+                      onClick={goTo("/transactions")}
                     >
-                      <a href="/transactions">Transactions</a>
+                      Transactions
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton
-                      asChild
-                      isActive={window.location.pathname === "/send-money"}
+                      className="w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900 dark:hover:text-white"
+                      onClick={goTo("/send-money")}
                     >
-                      <a href="/send-money">Send Money</a>
+                      Send Money
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
+
+            {/* Account Navigation */}
             <SidebarGroup>
               <SidebarGroupLabel>Account</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                      <a href="/profile">Profile</a>
+                    <SidebarMenuButton
+                      className="w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900 dark:hover:text-white"
+                      onClick={goTo("/profile")}
+                    >
+                      Profile
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                      <a href="/settings">Settings</a>
+                    <SidebarMenuButton
+                      className="w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900 dark:hover:text-white"
+                      onClick={goTo("/settings")}
+                    >
+                      Settings
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      className="w-full text-left px-4 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900"
+                      onClick={logout}
+                    >
+                      Logout
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
-          </SidebarContent>
+          </div>
+
           <SidebarRail />
         </Sidebar>
+
         <div className="flex w-full flex-col md:ml-20 lg:ml-64">
           <Header />
           <main className="flex-1 p-4 md:p-6">{children}</main>

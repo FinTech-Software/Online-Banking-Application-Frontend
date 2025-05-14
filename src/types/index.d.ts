@@ -24,12 +24,12 @@ export interface AuthUser {
 }
 
 export interface UserData {
-  token: string;
   username: string;
+  token: string;
 }
 
 export interface AuthContextType {
-  // user: AuthUser | null;
+  user: UserData | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (username: string, password: string) => Promise<UserData>;

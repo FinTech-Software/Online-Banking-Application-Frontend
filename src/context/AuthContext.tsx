@@ -134,7 +134,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   return (
     <AuthContext.Provider
       value={{
-        // user,
+        user,
         isAuthenticated: !!user,
         isLoading,
         login,

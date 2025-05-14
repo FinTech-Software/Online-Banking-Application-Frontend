@@ -21,6 +21,7 @@ function Signup() {
     confirmPassword: "",
     phone: "",
   });
+
   const [errors, setErrors] = useState<{
     username?: string;
     email?: string;
@@ -28,31 +29,24 @@ function Signup() {
     confirmPassword?: string;
     phone?: string;
   }>({});
+
+  const [globalError, setGlobalError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { signup } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    // Clear error when user types
+    setGlobalError(null); // clear global error on any input
     if (errors[e.target.name as keyof typeof errors]) {
       setErrors({ ...errors, [e.target.name]: undefined });
     }
   };
 
   const validateForm = () => {
-    const newErrors: {
-      username?: string;
-      email?: string;
-      password?: string;
-      confirmPassword?: string;
-      phone?: string;
-    } = {};
+    const newErrors: typeof errors = {};
 
-    if (!form.username.trim()) {
-      newErrors.username = "Username is required";
-    }
-
+    if (!form.username.trim()) newErrors.username = "Username is required";
     if (!form.email.trim()) {
       newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(form.email)) {
@@ -84,6 +78,8 @@ function Signup() {
     if (!validateForm()) return;
 
     setIsLoading(true);
+    setGlobalError(null);
+
     try {
       await signup(form.username, form.email, form.password, form.phone);
       navigate("/auth/login", {
@@ -92,11 +88,9 @@ function Signup() {
             "You've successfully signed up! Now login to use the banking application.",
         },
       });
-    } catch (error) {
-      setErrors({
-        ...errors,
-        username: "An error occurred during signup",
-      });
+    } catch (error: any) {
+      const errorMessage = error.message || "Signup failed. Please try again.";
+      setGlobalError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -109,6 +103,9 @@ function Signup() {
           <CardTitle className="text-center text-2xl font-bold text-blue-700">
             Create an Account
           </CardTitle>
+          {globalError && (
+            <p className="text-center text-sm text-red-600">{globalError}</p>
+          )}
           <CardDescription className="text-center">
             Enter your details to create your account
           </CardDescription>

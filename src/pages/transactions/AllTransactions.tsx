@@ -1,6 +1,4 @@
-"use client";
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DashboardLayout } from "../../components/layouts/DashboardLayout";
 import {
   Card,
@@ -11,6 +9,9 @@ import {
 import { TransactionItem } from "../../components/ui/transaction-item";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 // Generate more mock data
 const generateTransactions = () => {
@@ -82,11 +83,80 @@ const generateTransactions = () => {
 const allTransactions = generateTransactions();
 
 function AllTransactions() {
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const [userDetails, setUserDetails] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("all");
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
   const [currentPage, setCurrentPage] = useState(1);
   const transactionsPerPage = 10;
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isAuthenticated && !isLoading) {
+      navigate("/login");
+    }
+  }, [isAuthenticated, isLoading, navigate]);
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      const stored = localStorage.getItem("bankapp_user");
+      const parsed = stored ? JSON.parse(stored) : null;
+      const token = parsed?.token;
+
+      if (!user?.username || !token) return;
+
+      try {
+        const res = await axios.post(
+          "http://localhost:8080/v1/user/getUserDetails",
+          { username: user.username },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        setUserDetails(res.data);
+      } catch (error) {
+        console.error("Failed to fetch user details:", error);
+      }
+    };
+
+    fetchUserDetails();
+  }, [user]);
+
+  if (isLoading || !userDetails) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="flex flex-col items-center space-y-6">
+          <p className="text-xl font-medium text-gray-600">
+            Loading transaction details...
+          </p>
+          <svg
+            className="w-12 h-12 text-blue-500 animate-spin"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+            />
+          </svg>
+        </div>
+      </div>
+    );
+  }
 
   const filteredTransactions = allTransactions.filter((transaction) => {
     const matchesSearch =
