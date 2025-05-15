@@ -12,80 +12,19 @@ import { Input } from "../../components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
-
-// Mock data
-const transactions = [
-  {
-    id: "tx1",
-    type: "debit" as const,
-    status: "completed" as const,
-    amount: 120.5,
-    recipient: "Amazon",
-    date: new Date(2023, 3, 15),
-    description: "Online Shopping",
-  },
-  {
-    id: "tx2",
-    type: "credit" as const,
-    status: "completed" as const,
-    amount: 2500.0,
-    sender: "Employer Inc.",
-    date: new Date(2023, 3, 10),
-    description: "Salary",
-  },
-  {
-    id: "tx3",
-    type: "transfer" as const,
-    status: "pending" as const,
-    amount: 500.0,
-    recipient: "Savings Account",
-    date: new Date(2023, 3, 5),
-    description: "Monthly Transfer",
-  },
-  {
-    id: "tx4",
-    type: "debit" as const,
-    status: "failed" as const,
-    amount: 89.99,
-    recipient: "Streaming Service",
-    date: new Date(2023, 3, 2),
-    description: "Subscription",
-  },
-  {
-    id: "tx5",
-    type: "debit" as const,
-    status: "completed" as const,
-    amount: 45.0,
-    recipient: "Grocery Store",
-    date: new Date(2023, 3, 1),
-    description: "Groceries",
-  },
-  {
-    id: "tx6",
-    type: "credit" as const,
-    status: "completed" as const,
-    amount: 150.0,
-    sender: "John Smith",
-    date: new Date(2023, 2, 28),
-    description: "Payment",
-  },
-  {
-    id: "tx7",
-    type: "transfer" as const,
-    status: "completed" as const,
-    amount: 1000.0,
-    recipient: "Investment Account",
-    date: new Date(2023, 2, 25),
-    description: "Investment Transfer",
-  },
-];
+import { TransactionList } from "@/types";
 
 function Transactions() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const [userDetails, setUserDetails] = useState(null);
+  const [transactions, setTransactions] = useState<TransactionList[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("all");
   const navigate = useNavigate();
+
+  const stored = localStorage.getItem("bankapp_user");
+  const parsed = stored ? JSON.parse(stored) : null;
+  const token = parsed?.token;
 
   useEffect(() => {
     if (!isAuthenticated && !isLoading) {
@@ -95,10 +34,6 @@ function Transactions() {
 
   useEffect(() => {
     const fetchUserDetails = async () => {
-      const stored = localStorage.getItem("bankapp_user");
-      const parsed = stored ? JSON.parse(stored) : null;
-      const token = parsed?.token;
-
       if (!user?.username || !token) return;
 
       try {
@@ -113,13 +48,30 @@ function Transactions() {
           }
         );
         setUserDetails(res.data);
-        console.log(userDetails);
       } catch (error) {
         console.error("Failed to fetch user details:", error);
       }
     };
 
+    const fetchTransactionList = async () => {
+      try {
+        const res = await axios.get(
+          "http://localhost:8080/v1/transaction/getTransactionList",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        setTransactions(res.data);
+      } catch (error) {
+        console.error("Failed to fetch transaction list", error);
+      }
+    };
+
     fetchUserDetails();
+    fetchTransactionList();
   }, [user]);
 
   if (isLoading || !userDetails) {
@@ -155,28 +107,31 @@ function Transactions() {
   }
 
   const filteredTransactions = transactions.filter((transaction) => {
+    const type = transaction.type?.toLowerCase();
+    const status = transaction.status ? "completed" : "pending";
+    const receiver = transaction.receiver?.username?.toLowerCase() || "";
+    const sender = transaction.sender?.username?.toLowerCase() || "";
+    const description = transaction.description?.toLowerCase() || "";
+    const search = searchTerm.toLowerCase();
+
     const matchesSearch =
-      transaction.description
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      transaction.recipient?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.sender?.toLowerCase().includes(searchTerm.toLowerCase());
+      sender.includes(search) ||
+      receiver.includes(search) ||
+      description.includes(search);
 
-    if (filter === "all") return matchesSearch;
-    if (filter === "credit")
-      return transaction.type === "credit" && matchesSearch;
-    if (filter === "debit")
-      return transaction.type === "debit" && matchesSearch;
-    if (filter === "transfer")
-      return transaction.type === "transfer" && matchesSearch;
-    if (filter === "pending")
-      return transaction.status === "pending" && matchesSearch;
-    if (filter === "completed")
-      return transaction.status === "completed" && matchesSearch;
-    if (filter === "failed")
-      return transaction.status === "failed" && matchesSearch;
-
-    return matchesSearch;
+    switch (filter) {
+      case "credit":
+        return type === "credited" && matchesSearch;
+      case "debit":
+        return type === "debited" && matchesSearch;
+      case "completed":
+      case "pending":
+        return status === filter && matchesSearch;
+      case "failed":
+        return false;
+      default:
+        return matchesSearch;
+    }
   });
 
   return (
@@ -235,13 +190,6 @@ function Transactions() {
                 >
                   Expenses
                 </Button>
-                <Button
-                  variant={filter === "transfer" ? "primary" : "outline"}
-                  size="sm"
-                  onClick={() => setFilter("transfer")}
-                >
-                  Transfers
-                </Button>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -272,7 +220,23 @@ function Transactions() {
           <div className="space-y-4">
             {filteredTransactions.length > 0 ? (
               filteredTransactions.map((transaction) => (
-                <TransactionItem key={transaction.id} {...transaction} />
+                <TransactionItem
+                  key={transaction.id}
+                  id={transaction.id}
+                  type={
+                    transaction.type === "CREDITED"
+                      ? "CREDITED"
+                      : transaction.type === "DEBITED"
+                      ? "DEBITED"
+                      : "TRANSFERRED"
+                  }
+                  status={transaction.status}
+                  amount={transaction.amount}
+                  sender={transaction.sender}
+                  receiver={transaction.receiver}
+                  date={transaction.date}
+                  description={transaction.description || ""}
+                />
               ))
             ) : (
               <div className="flex h-40 flex-col items-center justify-center rounded-lg border border-dashed p-4 text-center">

@@ -10,32 +10,13 @@ import {
 } from "../components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Account, Transaction } from "@/types";
+import { Account } from "@/types";
 import DebouncedUserDropdown from "@/components/ui/DebouncedUserDropdown";
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
 
-// Mock data
-const accounts = [
-  {
-    id: "acc1",
-    name: "Main Account",
-    balance: 5280.42,
-    currency: "USD",
-    accountNumber: "**** 1234",
-  },
-  {
-    id: "acc2",
-    name: "Savings",
-    balance: 12750.89,
-    currency: "USD",
-    accountNumber: "**** 5678",
-  },
-];
-
 function SendMoney() {
   const [step, setStep] = useState(1);
-  const [selectedAccount, setSelectedAccount] = useState(accounts[0]);
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [newRecipient, setNewRecipient] = useState<Account | null>(null);
@@ -88,7 +69,7 @@ function SendMoney() {
         alert("Please enter a valid amount");
         return;
       }
-      if (parseFloat(amount) > selectedAccount.balance) {
+      if (userDetails && parseFloat(amount) > userDetails.balance) {
         alert("Insufficient funds");
         return;
       }
@@ -97,8 +78,8 @@ function SendMoney() {
       const res = await axios.post(
         "http://localhost:8080/v1/transaction/send-money",
         {
-          sender: userDetails.id,
-          receiver: newRecipient.id,
+          sender: userDetails?.id,
+          receiver: newRecipient?.id,
           amount: amount,
           description: description,
         },
@@ -132,7 +113,7 @@ function SendMoney() {
     }
     if (step === 2) {
       const amt = parseFloat(amount);
-      return amt > 0 && amt <= selectedAccount.balance;
+      return amt > 0 && userDetails !== null && amt <= userDetails.balance;
     }
     return true;
   };
@@ -192,12 +173,7 @@ function SendMoney() {
                       />
                       <p className="text-sm text-gray-500">
                         Available Balance:{" "}
-                        {userDetails
-                          ? new Intl.NumberFormat("en-US", {
-                              style: "currency",
-                              currency: selectedAccount.currency,
-                            }).format(userDetails.balance)
-                          : "Loading..."}
+                        {userDetails ? userDetails.balance : "Loading..."}
                       </p>
                     </div>
                   </div>

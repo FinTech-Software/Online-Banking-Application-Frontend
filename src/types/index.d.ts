@@ -53,6 +53,19 @@ export interface Transaction {
   description?: string;
 }
 
+export interface TransactionList {
+  id: string;
+  amount: number;
+  description: string;
+  type: "CREDITED" | "DEBITED";
+  status: boolean;
+  sender?: User;
+  receiver?: User;
+  date: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Account types
 export interface Account {
   id: string;

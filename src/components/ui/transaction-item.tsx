@@ -1,14 +1,15 @@
 import { cn } from "@/utils/cn";
+import { User } from "@/types";
 
 export interface TransactionProps {
   id: string;
-  type: "credit" | "debit" | "transfer";
-  status: "completed" | "pending" | "failed";
+  type: "CREDITED" | "DEBITED" | "TRANSFERRED";
+  status: boolean;
   amount: number;
   currency?: string;
-  recipient?: string;
-  sender?: string;
-  date: Date;
+  receiver?: User;
+  sender?: User;
+  date: string;
   description?: string;
   className?: string;
 }
@@ -17,12 +18,12 @@ export function TransactionItem({
   type,
   status,
   amount,
-  currency = "USD",
-  recipient,
+  receiver,
   sender,
   date,
   description,
   className,
+  currency = "USD",
 }: TransactionProps) {
   const formattedAmount = new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -33,24 +34,24 @@ export function TransactionItem({
     month: "short",
     day: "numeric",
     year: "numeric",
-  }).format(date);
+  }).format(new Date(date));
+
+  const statusLabel = status ? "Completed" : "Failed";
 
   const statusColors = {
-    completed: "bg-green-100 text-green-800",
-    pending: "bg-yellow-100 text-yellow-800",
-    failed: "bg-red-100 text-red-800",
+    Completed: "bg-green-100 text-green-800",
+    Failed: "bg-red-100 text-red-800",
   };
 
   const typeColors = {
-    credit: "text-green-600",
-    debit: "text-red-600",
-    transfer: "text-blue-600",
+    CREDITED: "text-green-600",
+    DEBITED: "text-red-600",
+    TRANSFERRED: "text-blue-600",
   };
 
   const typeIcons = {
-    credit: (
+    CREDITED: (
       <svg
-        xmlns="http://www.w3.org/2000/svg"
         className="h-5 w-5 text-green-500"
         viewBox="0 0 20 20"
         fill="currentColor"
@@ -62,9 +63,8 @@ export function TransactionItem({
         />
       </svg>
     ),
-    debit: (
+    DEBITED: (
       <svg
-        xmlns="http://www.w3.org/2000/svg"
         className="h-5 w-5 text-red-500"
         viewBox="0 0 20 20"
         fill="currentColor"
@@ -76,9 +76,8 @@ export function TransactionItem({
         />
       </svg>
     ),
-    transfer: (
+    TRANSFERRED: (
       <svg
-        xmlns="http://www.w3.org/2000/svg"
         className="h-5 w-5 text-blue-500"
         viewBox="0 0 20 20"
         fill="currentColor"
@@ -105,11 +104,11 @@ export function TransactionItem({
         </div>
         <div>
           <p className="font-medium">
-            {type === "credit"
-              ? `Received from ${sender}`
-              : type === "debit"
-              ? `Paid to ${recipient}`
-              : `Transfer to ${recipient}`}
+            {type === "CREDITED"
+              ? `Received from ${sender?.username ?? "Unknown"}`
+              : type === "DEBITED"
+              ? `Paid to ${receiver?.username ?? "Unknown"}`
+              : `Transfer to ${receiver?.username ?? "Unknown"}`}
           </p>
           <p className="text-sm text-gray-500">
             {description || "Transaction"}
@@ -119,16 +118,16 @@ export function TransactionItem({
       </div>
       <div className="text-right">
         <p className={cn("font-semibold", typeColors[type])}>
-          {type === "credit" ? "+" : "-"}
+          {type === "CREDITED" ? "+" : "-"}
           {formattedAmount}
         </p>
         <span
           className={cn(
             "mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium",
-            statusColors[status]
+            statusColors[statusLabel as keyof typeof statusColors]
           )}
         >
-          {status.charAt(0).toUpperCase() + status.slice(1)}
+          {statusLabel}
         </span>
       </div>
     </div>
