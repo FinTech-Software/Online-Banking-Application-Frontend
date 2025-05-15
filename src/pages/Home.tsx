@@ -27,9 +27,13 @@ function Home() {
                 </Link>
               </div>
             </div>
-            <div className="relative mx-auto h-[300px] w-full max-w-sm overflow-hidden rounded-xl bg-white shadow-lg">
+            <div className="relative mx-auto h-[550px] w-full max-w-xl overflow-hidden rounded-xl bg-white shadow-lg">
               <img
-                src="/placeholder.svg?height=300&width=400"
+                src="/assets/3d-internet-secuirty-badge.jpg?height=300&width=400"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = "/placeholder.svg?height=300&width=400";
+                }}
                 alt="App Interface"
                 className="h-full w-full object-cover"
               />
