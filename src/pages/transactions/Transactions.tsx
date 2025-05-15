@@ -113,6 +113,7 @@ function Transactions() {
           }
         );
         setUserDetails(res.data);
+        console.log(userDetails);
       } catch (error) {
         console.error("Failed to fetch user details:", error);
       }

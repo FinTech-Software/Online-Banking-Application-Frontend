@@ -8,6 +8,8 @@ import SendMoney from "../pages/SendMoney";
 import Transactions from "../pages/transactions/Transactions";
 import AllTransactions from "../pages/transactions/AllTransactions";
 import { JSX } from "react";
+import Profile from "@/pages/account/Profile";
+import Settings from "@/pages/account/Settings";
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
@@ -66,6 +68,22 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <AllTransactions />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <Settings />
           </ProtectedRoute>
         }
       />

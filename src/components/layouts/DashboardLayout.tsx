@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import {
   Sidebar,
-  SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
