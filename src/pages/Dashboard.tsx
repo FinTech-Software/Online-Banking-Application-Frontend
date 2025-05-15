@@ -5,7 +5,7 @@ import { TransactionItem } from "@/components/ui/transaction-item";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Account } from "@/types";
+import { Account, TransactionProps } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 
 const recentTransactions = [
@@ -109,6 +109,19 @@ function Dashboard() {
       </div>
     );
   }
+
+  const mapTransactionType = (type: string): TransactionProps["type"] => {
+    switch (type.toLowerCase()) {
+      case "credit":
+        return "CREDITED";
+      case "debit":
+        return "DEBITED";
+      case "transfer":
+        return "TRANSFERRED";
+      default:
+        throw new Error(`Unknown transaction type: ${type}`);
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -258,7 +271,11 @@ function Dashboard() {
         </div>
         <div className="space-y-4">
           {recentTransactions.map((transaction) => (
-            <TransactionItem key={transaction.id} {...transaction} />
+            <TransactionItem
+              key={transaction.id}
+              {...transaction}
+              type={mapTransactionType(transaction.type)}
+            />
           ))}
         </div>
       </div>

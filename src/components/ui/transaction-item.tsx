@@ -1,18 +1,5 @@
 import { cn } from "@/utils/cn";
-import { User } from "@/types";
-
-export interface TransactionProps {
-  id: string;
-  type: "CREDITED" | "DEBITED" | "TRANSFERRED";
-  status: boolean;
-  amount: number;
-  currency?: string;
-  receiver?: User;
-  sender?: User;
-  date: string;
-  description?: string;
-  className?: string;
-}
+import { TransactionProps } from "@/types";
 
 export function TransactionItem({
   type,

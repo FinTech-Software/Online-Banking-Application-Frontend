@@ -57,13 +57,38 @@ export interface TransactionList {
   id: string;
   amount: number;
   description: string;
-  type: "CREDITED" | "DEBITED";
+  type: "CREDITED" | "DEBITED" | "TRANSFERRED";
   status: boolean;
   sender?: User;
   receiver?: User;
   date: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface TransactionProps {
+  id: string;
+  type:
+  | "CREDITED"
+  | "DEBITED"
+  | "TRANSFERRED"
+  | "credit"
+  | "debit"
+  | "transfer";
+  status:
+  | "COMPLETED"
+  | "PENDING"
+  | "FAILED"
+  | "completed"
+  | "pending"
+  | "failed";
+  amount: number;
+  currency?: string;
+  receiver?: User;
+  sender?: User;
+  date: string;
+  description?: string;
+  className?: string;
 }
 
 // Account types
@@ -127,6 +152,7 @@ export interface CardTitleProps {
 }
 
 export interface CardDescriptionProps {
+  className?: string;
   className?: string;
   children: React.ReactNode;
 }
