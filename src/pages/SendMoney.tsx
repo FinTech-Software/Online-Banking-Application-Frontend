@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "../components/layouts/DashboardLayout";
 import {
   Card,
@@ -10,6 +10,10 @@ import {
 } from "../components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Account, Transaction } from "@/types";
+import DebouncedUserDropdown from "@/components/ui/DebouncedUserDropdown";
+import { useAuth } from "@/context/AuthContext";
+import axios from "axios";
 
 // Mock data
 const accounts = [
@@ -29,65 +33,57 @@ const accounts = [
   },
 ];
 
-const recentRecipients = [
-  {
-    id: "rec1",
-    name: "John Smith",
-    accountNumber: "**** 9876",
-    bankName: "Chase Bank",
-  },
-  {
-    id: "rec2",
-    name: "Jane Doe",
-    accountNumber: "**** 5432",
-    bankName: "Bank of America",
-  },
-  {
-    id: "rec3",
-    name: "Savings Account",
-    accountNumber: "**** 5678",
-    bankName: "Internal Transfer",
-  },
-];
-
 function SendMoney() {
   const [step, setStep] = useState(1);
   const [selectedAccount, setSelectedAccount] = useState(accounts[0]);
-  const [selectedRecipient, setSelectedRecipient] = useState<
-    (typeof recentRecipients)[0] | null
-  >(null);
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
-  const [newRecipient, setNewRecipient] = useState({
-    name: "",
-    accountNumber: "",
-    bankName: "",
-    email: "",
-  });
+  const [newRecipient, setNewRecipient] = useState<Account | null>(null);
+
+  const { user } = useAuth();
+  const [userDetails, setUserDetails] = useState<Account | null>(null);
+  const stored = localStorage.getItem("bankapp_user");
+  const parsed = stored ? JSON.parse(stored) : null;
+  const token = parsed?.token;
+
+  if (!user?.username || !token) return;
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      try {
+        const res = await axios.post<Account>(
+          "http://localhost:8080/v1/user/getUserDetails",
+          { username: user.username },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        setUserDetails(res.data);
+      } catch (error) {
+        console.error("Failed to fetch user details:", error);
+      }
+    };
+
+    fetchUserDetails();
+  }, [user]);
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Only allow numbers and a single decimal point
     if (/^\d*\.?\d*$/.test(value)) {
       setAmount(value);
     }
   };
 
-  const handleNewRecipientChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setNewRecipient({ ...newRecipient, [name]: value });
-  };
-
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (step === 1) {
-      // Validate recipient selection
-      if (!selectedRecipient && !newRecipient.name) {
-        alert("Please select or add a recipient");
+      if (!newRecipient) {
+        alert("Please select a recipient");
         return;
       }
       setStep(2);
     } else if (step === 2) {
-      // Validate amount
       if (!amount || parseFloat(amount) <= 0) {
         alert("Please enter a valid amount");
         return;
@@ -98,19 +94,29 @@ function SendMoney() {
       }
       setStep(3);
     } else if (step === 3) {
-      // Process transfer (would be an API call in a real app)
+      const res = await axios.post(
+        "http://localhost:8080/v1/transaction/send-money",
+        {
+          sender: userDetails.id,
+          receiver: newRecipient.id,
+          amount: amount,
+          description: description,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log(res.data);
+
       alert("Money sent successfully!");
-      // Reset form
       setStep(1);
-      setSelectedRecipient(null);
       setAmount("");
       setDescription("");
-      setNewRecipient({
-        name: "",
-        accountNumber: "",
-        bankName: "",
-        email: "",
-      });
+      setNewRecipient(null);
     }
   };
 
@@ -122,19 +128,11 @@ function SendMoney() {
 
   const isStepComplete = () => {
     if (step === 1) {
-      return (
-        selectedRecipient ||
-        (newRecipient.name &&
-          newRecipient.accountNumber &&
-          newRecipient.bankName)
-      );
+      return !!newRecipient;
     }
     if (step === 2) {
-      return (
-        amount &&
-        parseFloat(amount) > 0 &&
-        parseFloat(amount) <= selectedAccount.balance
-      );
+      const amt = parseFloat(amount);
+      return amt > 0 && amt <= selectedAccount.balance;
     }
     return true;
   };
@@ -148,7 +146,7 @@ function SendMoney() {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2">
         <div className="md:col-span-2">
           <Card>
             <CardHeader>
@@ -166,66 +164,14 @@ function SendMoney() {
                 <div className="space-y-6">
                   <div>
                     <h3 className="mb-4 text-lg font-medium">
-                      Recent Recipients
-                    </h3>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      {recentRecipients.map((recipient) => (
-                        <div
-                          key={recipient.id}
-                          className={`cursor-pointer rounded-lg border p-4 transition-colors ${
-                            selectedRecipient?.id === recipient.id
-                              ? "border-blue-500 bg-blue-50"
-                              : "hover:bg-gray-50"
-                          }`}
-                          onClick={() => setSelectedRecipient(recipient)}
-                        >
-                          <p className="font-medium">{recipient.name}</p>
-                          <p className="text-sm text-gray-500">
-                            {recipient.accountNumber}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {recipient.bankName}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="mb-4 text-lg font-medium">
                       Add New Recipient
                     </h3>
-                    <div className="space-y-4">
-                      <Input
-                        label="Recipient Name"
-                        name="name"
-                        value={newRecipient.name}
-                        onChange={handleNewRecipientChange}
-                        placeholder="John Doe"
-                      />
-                      <Input
-                        label="Account Number"
-                        name="accountNumber"
-                        value={newRecipient.accountNumber}
-                        onChange={handleNewRecipientChange}
-                        placeholder="XXXX XXXX XXXX XXXX"
-                      />
-                      <Input
-                        label="Bank Name"
-                        name="bankName"
-                        value={newRecipient.bankName}
-                        onChange={handleNewRecipientChange}
-                        placeholder="Bank of America"
-                      />
-                      <Input
-                        label="Email (Optional)"
-                        name="email"
-                        type="email"
-                        value={newRecipient.email}
-                        onChange={handleNewRecipientChange}
-                        placeholder="john.doe@example.com"
-                      />
-                    </div>
+                    <DebouncedUserDropdown
+                      value={newRecipient}
+                      onSelect={(user) => {
+                        setNewRecipient(user);
+                      }}
+                    />
                   </div>
                 </div>
               )}
@@ -243,14 +189,15 @@ function SendMoney() {
                         value={amount}
                         onChange={handleAmountChange}
                         placeholder="0.00"
-                        icon={<span className="text-gray-500">$</span>}
                       />
                       <p className="text-sm text-gray-500">
                         Available Balance:{" "}
-                        {new Intl.NumberFormat("en-US", {
-                          style: "currency",
-                          currency: selectedAccount.currency,
-                        }).format(selectedAccount.balance)}
+                        {userDetails
+                          ? new Intl.NumberFormat("en-US", {
+                              style: "currency",
+                              currency: selectedAccount.currency,
+                            }).format(userDetails.balance)
+                          : "Loading..."}
                       </p>
                     </div>
                   </div>
@@ -278,39 +225,25 @@ function SendMoney() {
                     <div className="mb-4 grid grid-cols-2 gap-4">
                       <div>
                         <p className="text-sm text-gray-500">From</p>
-                        <p className="font-medium">{selectedAccount.name}</p>
+                        <p className="font-medium">{userDetails?.username}</p>
                         <p className="text-sm text-gray-500">
-                          {selectedAccount.accountNumber}
+                          {userDetails?.email}
                         </p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">To</p>
                         <p className="font-medium">
-                          {selectedRecipient
-                            ? selectedRecipient.name
-                            : newRecipient.name}
+                          {newRecipient?.username || "N/A"}
                         </p>
                         <p className="text-sm text-gray-500">
-                          {selectedRecipient
-                            ? selectedRecipient.accountNumber
-                            : newRecipient.accountNumber}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {selectedRecipient
-                            ? selectedRecipient.bankName
-                            : newRecipient.bankName}
+                          {newRecipient?.email || "N/A"}
                         </p>
                       </div>
                     </div>
                     <div className="mb-4 border-t border-gray-200 pt-4">
                       <div className="flex justify-between">
                         <p className="font-medium">Amount</p>
-                        <p className="font-bold">
-                          {new Intl.NumberFormat("en-US", {
-                            style: "currency",
-                            currency: selectedAccount.currency,
-                          }).format(parseFloat(amount))}
-                        </p>
+                        <p className="font-bold">₹{parseFloat(amount)}</p>
                       </div>
                       {description && (
                         <div className="mt-2 flex justify-between">
@@ -335,7 +268,7 @@ function SendMoney() {
                   Back
                 </Button>
               ) : (
-                <div></div>
+                <div />
               )}
               <Button onClick={handleContinue} disabled={!isStepComplete()}>
                 {step === 3 ? "Send Money" : "Continue"}
@@ -344,7 +277,7 @@ function SendMoney() {
           </Card>
         </div>
 
-        <div>
+        {/* <div>
           <Card>
             <CardHeader>
               <CardTitle>From Account</CardTitle>
@@ -376,77 +309,7 @@ function SendMoney() {
               </div>
             </CardContent>
           </Card>
-
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Transfer Tips</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-start">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="mr-2 h-5 w-5 text-blue-500"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  Double-check recipient details before confirming
-                </li>
-                <li className="flex items-start">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="mr-2 h-5 w-5 text-blue-500"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  Transfers between accounts are usually instant
-                </li>
-                <li className="flex items-start">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="mr-2 h-5 w-5 text-blue-500"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  External transfers may take 1-3 business days
-                </li>
-                <li className="flex items-start">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="mr-2 h-5 w-5 text-blue-500"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  Save recipients for faster transfers in the future
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
+        </div> */}
       </div>
     </DashboardLayout>
   );

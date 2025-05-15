@@ -47,16 +47,10 @@ export type TransactionType = "credit" | "debit" | "transfer";
 export type TransactionStatus = "completed" | "pending" | "failed";
 
 export interface Transaction {
-  id: string;
-  type: TransactionType;
-  status: TransactionStatus;
-  amount: number;
-  currency?: string;
-  recipient?: string;
   sender?: string;
-  date: Date;
+  reciever?: string;
+  amount: number;
   description?: string;
-  className?: string;
 }
 
 // Account types
