@@ -12,79 +12,12 @@ import { Input } from "../../components/ui/input";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-
-// Generate more mock data
-const generateTransactions = () => {
-  const types = ["credit", "debit", "transfer"] as const;
-  const statuses = ["completed", "pending", "failed"] as const;
-  const recipients = [
-    "Amazon",
-    "Netflix",
-    "Grocery Store",
-    "Gas Station",
-    "Savings Account",
-    "Investment Account",
-  ];
-  const senders = [
-    "Employer Inc.",
-    "John Smith",
-    "Jane Doe",
-    "Client LLC",
-    "Refund Service",
-  ];
-  const descriptions = [
-    "Online Shopping",
-    "Subscription",
-    "Groceries",
-    "Fuel",
-    "Transfer",
-    "Investment",
-    "Salary",
-    "Payment",
-  ];
-
-  const transactions = [];
-
-  for (let i = 1; i <= 30; i++) {
-    const type = types[Math.floor(Math.random() * types.length)];
-    const status = statuses[Math.floor(Math.random() * statuses.length)];
-    const amount = Number.parseFloat((Math.random() * 1000 + 10).toFixed(2));
-    const recipient =
-      type !== "credit"
-        ? recipients[Math.floor(Math.random() * recipients.length)]
-        : undefined;
-    const sender =
-      type === "credit"
-        ? senders[Math.floor(Math.random() * senders.length)]
-        : undefined;
-    const description =
-      descriptions[Math.floor(Math.random() * descriptions.length)];
-    const date = new Date(
-      2023,
-      Math.floor(Math.random() * 4),
-      Math.floor(Math.random() * 28) + 1
-    );
-
-    transactions.push({
-      id: `tx${i}`,
-      type,
-      status,
-      amount,
-      recipient,
-      sender,
-      date,
-      description,
-    });
-  }
-
-  return transactions.sort((a, b) => b.date.getTime() - a.date.getTime());
-};
-
-const allTransactions = generateTransactions();
+import { Account, TransactionProps } from "@/types";
 
 function AllTransactions() {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const [userDetails, setUserDetails] = useState(null);
+  const [userDetails, setUserDetails] = useState<Account | null>(null);
+  const [transactions, setTransactions] = useState<TransactionProps[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("all");
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
@@ -99,11 +32,11 @@ function AllTransactions() {
   }, [isAuthenticated, isLoading, navigate]);
 
   useEffect(() => {
-    const fetchUserDetails = async () => {
-      const stored = localStorage.getItem("bankapp_user");
-      const parsed = stored ? JSON.parse(stored) : null;
-      const token = parsed?.token;
+    const stored = localStorage.getItem("bankapp_user");
+    const parsed = stored ? JSON.parse(stored) : null;
+    const token = parsed?.token;
 
+    const fetchUserDetails = async () => {
       if (!user?.username || !token) return;
 
       try {
@@ -123,7 +56,42 @@ function AllTransactions() {
       }
     };
 
+    const fetchTransactionList = async () => {
+      try {
+        const res = await axios.get(
+          "http://localhost:8080/v1/transaction/getTransactionList",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        const data = res.data.map((t: any, index: number) => ({
+          id: t.id || `tx${index + 1}`,
+          type: t.type || "debit",
+          status: t.status || "completed",
+          amount: parseFloat(t.amount),
+          receiver: t.receiver,
+          sender: t.sender,
+          date: new Date(t.date),
+          description: t.description,
+        }));
+        setTransactions(
+          data.sort(
+            (
+              a: { date: { getTime: () => number } },
+              b: { date: { getTime: () => number } }
+            ) => b.date.getTime() - a.date.getTime()
+          )
+        );
+      } catch (error) {
+        console.error("Failed to fetch transaction list", error);
+      }
+    };
+
     fetchUserDetails();
+    fetchTransactionList();
   }, [user]);
 
   if (isLoading || !userDetails) {
@@ -158,17 +126,21 @@ function AllTransactions() {
     );
   }
 
-  const filteredTransactions = allTransactions.filter((transaction) => {
+  const filteredTransactions = transactions.filter((transaction) => {
     const matchesSearch =
       transaction.description
         ?.toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
-      transaction.recipient?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.sender?.toLowerCase().includes(searchTerm.toLowerCase());
+      transaction.receiver?.username
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      transaction.sender?.username
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase());
 
     let matchesFilter = true;
     if (filter !== "all") {
-      if (filter === "credit" || filter === "debit" || filter === "transfer") {
+      if (["credit", "debit", "transfer"].includes(filter)) {
         matchesFilter = transaction.type === filter;
       } else {
         matchesFilter = transaction.status === filter;
@@ -177,7 +149,7 @@ function AllTransactions() {
 
     let matchesDateRange = true;
     if (dateRange.start && dateRange.end) {
-      const transactionDate = transaction.date.getTime();
+      const transactionDate = (transaction.date as Date).getTime();
       const startDate = new Date(dateRange.start).getTime();
       const endDate = new Date(dateRange.end).getTime();
       matchesDateRange =
@@ -187,7 +159,6 @@ function AllTransactions() {
     return matchesSearch && matchesFilter && matchesDateRange;
   });
 
-  // Pagination
   const indexOfLastTransaction = currentPage * transactionsPerPage;
   const indexOfFirstTransaction = indexOfLastTransaction - transactionsPerPage;
   const currentTransactions = filteredTransactions.slice(
@@ -231,59 +202,36 @@ function AllTransactions() {
                 className="md:w-80"
               />
               <div className="flex flex-wrap gap-2">
-                <Button
-                  variant={filter === "all" ? "primary" : "outline"}
-                  size="sm"
-                  onClick={() => setFilter("all")}
-                >
-                  All
-                </Button>
-                <Button
-                  variant={filter === "credit" ? "primary" : "outline"}
-                  size="sm"
-                  onClick={() => setFilter("credit")}
-                >
-                  Income
-                </Button>
-                <Button
-                  variant={filter === "debit" ? "primary" : "outline"}
-                  size="sm"
-                  onClick={() => setFilter("debit")}
-                >
-                  Expenses
-                </Button>
-                <Button
-                  variant={filter === "transfer" ? "primary" : "outline"}
-                  size="sm"
-                  onClick={() => setFilter("transfer")}
-                >
-                  Transfers
-                </Button>
+                {["all", "credit", "debit", "transfer"].map((type) => (
+                  <Button
+                    key={type}
+                    variant={filter === type ? "primary" : "outline"}
+                    size="sm"
+                    onClick={() => setFilter(type)}
+                  >
+                    {type === "all"
+                      ? "All"
+                      : type === "credit"
+                      ? "Income"
+                      : type === "debit"
+                      ? "Expenses"
+                      : "Transfers"}
+                  </Button>
+                ))}
               </div>
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <Button
-                variant={filter === "completed" ? "primary" : "outline"}
-                size="sm"
-                onClick={() => setFilter("completed")}
-              >
-                Completed
-              </Button>
-              <Button
-                variant={filter === "pending" ? "primary" : "outline"}
-                size="sm"
-                onClick={() => setFilter("pending")}
-              >
-                Pending
-              </Button>
-              <Button
-                variant={filter === "failed" ? "primary" : "outline"}
-                size="sm"
-                onClick={() => setFilter("failed")}
-              >
-                Failed
-              </Button>
+              {["completed", "pending", "failed"].map((status) => (
+                <Button
+                  key={status}
+                  variant={filter === status ? "primary" : "outline"}
+                  size="sm"
+                  onClick={() => setFilter(status)}
+                >
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </Button>
+              ))}
             </div>
 
             <div className="flex flex-col space-y-4 md:flex-row md:items-center md:space-x-4 md:space-y-0">
@@ -336,7 +284,6 @@ function AllTransactions() {
             )}
           </div>
 
-          {/* Pagination */}
           {filteredTransactions.length > 0 && (
             <div className="mt-6 flex items-center justify-between">
               <div className="text-sm text-gray-500">

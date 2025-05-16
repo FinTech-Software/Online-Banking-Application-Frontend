@@ -10,7 +10,7 @@ export function TransactionItem({
   date,
   description,
   className,
-  currency = "USD",
+  currency = "INR",
 }: TransactionProps) {
   const formattedAmount = new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -87,7 +87,7 @@ export function TransactionItem({
     >
       <div className="flex items-center space-x-4">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
-          {typeIcons[type]}
+          {typeIcons[type.toUpperCase() as keyof typeof typeIcons]}
         </div>
         <div>
           <p className="font-medium">
@@ -104,7 +104,12 @@ export function TransactionItem({
         </div>
       </div>
       <div className="text-right">
-        <p className={cn("font-semibold", typeColors[type])}>
+        <p
+          className={cn(
+            "font-semibold",
+            typeColors[type.toUpperCase() as keyof typeof typeColors]
+          )}
+        >
           {type === "CREDITED" ? "+" : "-"}
           {formattedAmount}
         </p>

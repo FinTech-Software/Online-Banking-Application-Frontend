@@ -56,7 +56,7 @@ function Transactions() {
     const fetchTransactionList = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:8080/v1/transaction/getTransactionList",
+          "http://localhost:8080/v1/transaction/getTransactionList?limit=10",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -230,7 +230,7 @@ function Transactions() {
                       ? "DEBITED"
                       : "TRANSFERRED"
                   }
-                  status={transaction.status}
+                  status={transaction.status ? "COMPLETED" : "PENDING"}
                   amount={transaction.amount}
                   sender={transaction.sender}
                   receiver={transaction.receiver}

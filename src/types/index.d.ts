@@ -1,4 +1,5 @@
 import type React from "react";
+
 // User types
 export interface User {
   username: string;
@@ -43,8 +44,8 @@ export interface AuthContextType {
 }
 
 // Transaction types
-export type TransactionType = "credit" | "debit" | "transfer";
-export type TransactionStatus = "completed" | "pending" | "failed";
+export type TransactionType = "CREDITED" | "DEBITED" | "TRANSFERRED";
+export type TransactionStatus = "COMPLETED" | "PENDING" | "FAILED";
 
 export interface Transaction {
   sender?: string;
@@ -61,32 +62,20 @@ export interface TransactionList {
   status: boolean;
   sender?: User;
   receiver?: User;
-  date: string;
+  date: Date;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface TransactionProps {
   id: string;
-  type:
-  | "CREDITED"
-  | "DEBITED"
-  | "TRANSFERRED"
-  | "credit"
-  | "debit"
-  | "transfer";
-  status:
-  | "COMPLETED"
-  | "PENDING"
-  | "FAILED"
-  | "completed"
-  | "pending"
-  | "failed";
+  type: TransactionType;
+  status: TransactionStatus;
   amount: number;
   currency?: string;
   receiver?: User;
   sender?: User;
-  date: string;
+  date: Date | string;
   description?: string;
   className?: string;
 }
@@ -152,7 +141,6 @@ export interface CardTitleProps {
 }
 
 export interface CardDescriptionProps {
-  className?: string;
   className?: string;
   children: React.ReactNode;
 }

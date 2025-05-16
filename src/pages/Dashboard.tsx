@@ -8,39 +8,10 @@ import axios from "axios";
 import { Account, TransactionProps } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 
-const recentTransactions = [
-  {
-    id: "tx1",
-    type: "debit" as const,
-    status: "completed" as const,
-    amount: 120.5,
-    recipient: "Amazon",
-    date: new Date(2023, 3, 15),
-    description: "Online Shopping",
-  },
-  {
-    id: "tx2",
-    type: "credit" as const,
-    status: "completed" as const,
-    amount: 2500.0,
-    sender: "Employer Inc.",
-    date: new Date(2023, 3, 10),
-    description: "Salary",
-  },
-  {
-    id: "tx3",
-    type: "transfer" as const,
-    status: "pending" as const,
-    amount: 500.0,
-    recipient: "Savings Account",
-    date: new Date(2023, 3, 5),
-    description: "Monthly Transfer",
-  },
-];
-
 function Dashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const [userDetails, setUserDetails] = useState<Account | null>(null);
+  const [transactions, setTransactions] = useState<TransactionProps[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -78,6 +49,33 @@ function Dashboard() {
     fetchUserDetails();
   }, [user]);
 
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      const stored = localStorage.getItem("bankapp_user");
+      const parsed = stored ? JSON.parse(stored) : null;
+      const token = parsed?.token;
+
+      if (!token) return;
+
+      try {
+        const res = await axios.get<TransactionProps[]>(
+          "http://localhost:8080/v1/transaction/getTransactionList?limit=3",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        setTransactions(res.data);
+      } catch (error) {
+        console.error("Failed to fetch transactions:", error);
+      }
+    };
+
+    fetchTransactions();
+  }, []);
+
   if (isLoading || !userDetails) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
@@ -112,14 +110,17 @@ function Dashboard() {
 
   const mapTransactionType = (type: string): TransactionProps["type"] => {
     switch (type.toLowerCase()) {
+      case "credited":
       case "credit":
         return "CREDITED";
+      case "debited":
       case "debit":
         return "DEBITED";
+      case "transferred":
       case "transfer":
         return "TRANSFERRED";
       default:
-        throw new Error(`Unknown transaction type: ${type}`);
+        return "TRANSFERRED";
     }
   };
 
@@ -270,13 +271,17 @@ function Dashboard() {
           </Link>
         </div>
         <div className="space-y-4">
-          {recentTransactions.map((transaction) => (
-            <TransactionItem
-              key={transaction.id}
-              {...transaction}
-              type={mapTransactionType(transaction.type)}
-            />
-          ))}
+          {transactions.length === 0 ? (
+            <p className="text-gray-500">No recent transactions found.</p>
+          ) : (
+            transactions.map((transaction) => (
+              <TransactionItem
+                key={transaction.id}
+                {...transaction}
+                type={mapTransactionType(transaction.type)}
+              />
+            ))
+          )}
         </div>
       </div>
     </DashboardLayout>
