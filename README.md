@@ -92,7 +92,7 @@ FinTech-Software/ [Organization on GitHub]
 
 | 🧩 **Feature**                                    | 📸 **Screenshot**                                                                    |
 | ------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| 🏠 **Home Screen**                                | ![Home](public/screenshots/home-screen.png)                                          |
+| 🏠 **Home Screen**                                | ![Home](public/screenshots/home-screen-oba.png)                                      |
 | 📝 **Signup**                                     | ![Signup](public/screenshots/signup.png)                                             |
 | 🔐 **Login**                                      | ![Login](public/screenshots/login.png)                                               |
 | 📊 **Dashboard**                                  | ![Dashboard](public/screenshots/dashboard.png)                                       |
