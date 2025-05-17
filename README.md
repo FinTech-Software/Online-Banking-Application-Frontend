@@ -123,13 +123,13 @@ We developed a machine learning model capable of detecting fraudulent transactio
 
 ## 🤝 Contributors
 
-| Name                                                     | Role                                                    |
-| -------------------------------------------------------- | ------------------------------------------------------- |
-| [Mohammed Varaliya](https://github.com/Mohammedvaraliya) | Project Lead, Backend, Frontend, ML Model & Integration |
-| [Vraj Shah](https://github.com/v4vraj)                   | Project Lead, Backend Development, Docker, Frontend     |
-| \[Jayesh Mal]                                            | UI/UX, Frontend                                         |
-| \[Ayush]                                                 | UI/UX, System Design                                    |
-| \[Hamza]                                                 | UI/UX, System Design                                    |
+| Name                                                     | Role                                                                          |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| [Mohammed Varaliya](https://github.com/Mohammedvaraliya) | Project Lead, Backend, Frontend, ML Model & Integration, UI/UX, System Design |
+| [Vraj Shah](https://github.com/v4vraj)                   | Project Lead, Backend Development, Docker, Frontend, UI/UX, System Design     |
+| \[Jayesh Mal]                                            | UI/UX, Frontend                                                               |
+| \[Ayush]                                                 | UI/UX, System Design                                                          |
+| \[Hamza]                                                 | UI/UX, System Design                                                          |
 
 ---
 
