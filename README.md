@@ -1,54 +1,147 @@
-# React + TypeScript + Vite
+# 💳 Online Banking Application – FinTech Software
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An end-to-end **Online Banking System** that mimics real-world banking platforms like ICICI, BOI, or HDFC. This system allows users to securely sign up, authenticate, send/receive money, and visualize transaction history. It also includes an advanced **Fraud Detection System** to identify suspicious transactions based on historical patterns.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 📚 Table of Contents
 
-## Expanding the ESLint configuration
+- [🔧 System Architecture](#-system-architecture)
+- [🚀 Features](#-features)
+- [📂 Project Structure](#-project-structure)
+- [🔐 Authentication & Security](#-authentication--security)
+- [📦 Tech Stack](#-tech-stack)
+- [🖼️ Application Screenshots](#️-application-screenshots)
+- [📊 Fraud Detection System](#-fraud-detection-system)
+- [🤝 Contributors](#-contributors)
+- [📎 Useful Links](#-useful-links)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## 🔧 System Architecture
+
+Before development, we invested several weeks designing a robust architecture covering:
+
+- ✅ Functional & Non-Functional Requirements
+- 🧬 High-Level Design (HLD)
+- 🛠️ Low-Level Design (LLD)
+- 🔄 Sequence Diagrams & Flow Diagrams
+
+📌 **[Design Docs & Diagrams](https://app.eraser.io/workspace/CXMV5NsTickZUMIarl8n?origin=share)**
+
+---
+
+## 🚀 Features
+
+### ✅ Backend (Spring Boot + RabbitMQ)
+
+- JWT-based secure login/signup
+- Asynchronous transaction processing via RabbitMQ
+- Endpoints for user data, transactions, and token validation
+- API weight limiting and pagination support
+
+### 🎨 Frontend (Vite + React + TypeScript)
+
+- Fully responsive & modern UI using TailwindCSS and ShadCN
+- Signup/Login, Dashboard, Transaction History
+- Money Transfer (Send/Receive) with real-time feedback
+- Reusable components and modular code structure
+
+### 🔍 Fraud Detection
+
+- Machine Learning model that predicts fraud based on transaction patterns
+- REST API for integrating predictions into transaction flow
+- Built with Python + Flask and explained with Google Gemini
+
+---
+
+## 📂 Project Structure
+
+```bash
+FinTech-Software/ [Organization on GitHub]
+│
+├── java_backend/
+├── Online-Banking-Application-Frontend/
+├── ML-Model-For-Fraud-Detection-and-Risk-Analysis-API/
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🔐 Authentication & Security
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+- Implemented full token-based security (JWT + Refresh Tokens)
+- Secure password storage using hashing
+- API protection via route-level guards
+- Session timeout and token expiry handling
+
+---
+
+## 📦 Tech Stack
+
+| Layer         | Technology Used                        |
+| ------------- | -------------------------------------- |
+| Backend       | Spring Boot, MySQL, RabbitMQ, Java     |
+| Frontend      | React, TypeScript, Vite, TailwindCSS   |
+| ML Model      | Python, Flask, Scikit-learn, Pandas    |
+| Auth/Security | JWT, Refresh Tokens, BCrypt            |
+| DevOps        | Docker, Docker Compose, GitHub Actions |
+
+---
+
+## 🖼️ Application Screenshots
+
+| 🧩 **Feature**                                    | 📸 **Screenshot**                                                                    |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| 🏠 **Home Screen**                                | ![Home](public/screenshots/home-screen.png)                                          |
+| 📝 **Signup**                                     | ![Signup](public/screenshots/signup.png)                                             |
+| 🔐 **Login**                                      | ![Login](public/screenshots/login.png)                                               |
+| 📊 **Dashboard**                                  | ![Dashboard](public/screenshots/dashboard.png)                                       |
+| 💸 **Send Money**                                 | ![Send Money](public/screenshots/send-money.png)                                     |
+| 📈 **Recent Transactions**                        | ![Transactions](public/screenshots/transactions.png)                                 |
+| 📋 **All Transactions**                           | ![All Txns](public/screenshots/all-transactions.png)                                 |
+| 📉 **ML Model – Fraud Transaction Detected**      | ![ML Fraud](public/screenshots/ml-model-for-fraud-detection-ml-model-fraud.png)      |
+| 📈 **ML Model – Legitimate Transaction Detected** | ![ML Legit](public/screenshots/ml-model-for-fraud-detection-Al-model-legitimate.png) |
+| 🤖 **AI Model – Fraud Transaction Detected**      | ![AI Fraud](public/screenshots/ml-model-for-fraud-detection-Al-model-fraud.png)      |
+| 🧾 **AI Model – Legitimate Transaction Detected** | ![AI Legit](public/screenshots/ml-model-for-fraud-detection-Al-model-legitimate.png) |
+
+---
+
+## 📊 Fraud Detection System
+
+We developed a machine learning model capable of detecting fraudulent transactions using patterns in past data.
+
+### ✅ Features:
+
+- Binary classification (Fraud vs Legitimate)
+- RESTful API in Flask
+- Google Gemini AI integration to explain predictions
+- Real-time integration with backend for fraud alerts
+
+📘 **[Fraud Detection README](https://github.com/FinTech-Software/ML-Model-For-Fraud-Detection-and-Risk-Analysis-API/blob/main/README.md)**
+
+---
+
+## 🤝 Contributors
+
+| Name                                                     | Role                                                    |
+| -------------------------------------------------------- | ------------------------------------------------------- |
+| [Mohammed Varaliya](https://github.com/Mohammedvaraliya) | Project Lead, Backend, Frontend, ML Model & Integration |
+| [Vraj Shah](https://github.com/v4vraj)                   | Project Lead, Backend Development, Docker, Frontend     |
+| \[Jayesh Mal]                                            | UI/UX, Frontend                                         |
+| \[Ayush]                                                 | UI/UX, System Design                                    |
+| \[Hamza]                                                 | UI/UX, System Design                                    |
+
+---
+
+## 📎 Useful Links
+
+- 🔗 Backend Repo: [java_backend](https://github.com/FinTech-Software/java_backend)
+- 🔗 Frontend Repo: [Online-Banking-Application-Frontend](https://github.com/FinTech-Software/Online-Banking-Application-Frontend)
+- 🔗 ML Fraud Detection: [ML Fraud API](https://github.com/FinTech-Software/ML-Model-For-Fraud-Detection-and-Risk-Analysis-API)
+- 🔗 System Design Workspace: [Design Docs](https://app.eraser.io/workspace/CXMV5NsTickZUMIarl8n?origin=share)
+
+---
+
+> 📌 This is a final-year Advanced Java project, combining real-world technologies and a professional development workflow to simulate a modern FinTech banking solution.
+
+---
