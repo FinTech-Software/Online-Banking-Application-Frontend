@@ -10,6 +10,8 @@ An end-to-end **Online Banking System** that mimics real-world banking platforms
 - [🚀 Features](#-features)
 - [📂 Project Structure](#-project-structure)
 - [🔐 Authentication & Security](#-authentication--security)
+- [🐳 Docker Setup](#-docker-setup)
+- [🛠️ Getting Started](#-getting-started)
 - [📦 Tech Stack](#-tech-stack)
 - [🖼️ Application Screenshots](#️-application-screenshots)
 - [📊 Fraud Detection System](#-fraud-detection-system)
@@ -58,7 +60,7 @@ Before development, we invested several weeks designing a robust architecture co
 ## 📂 Project Structure
 
 ```bash
-FinTech-Software/ [Organization on GitHub]
+FinTech-Software/
 │
 ├── java_backend/
 ├── Online-Banking-Application-Frontend/
@@ -73,6 +75,90 @@ FinTech-Software/ [Organization on GitHub]
 - Secure password storage using hashing
 - API protection via route-level guards
 - Session timeout and token expiry handling
+
+---
+
+## 🐳 Docker Setup
+
+To ensure a consistent and collaborative development environment for all team members, we used **Docker Compose** to bundle our backend environment into a single unit.
+
+### 🧱 Docker Images Used:
+
+- `java_backend-backend:latest` — Spring Boot backend
+- `mysql:8` — Database container
+- `rabbitmq:3-management` — Queue for async transactions
+
+### 🧩 Docker Compose Container:
+
+All the above services are composed into one container named: `java_backend`
+
+### ▶️ Run Docker Compose
+
+```bash
+docker compose up -d
+```
+
+- This command will build the services and run them on the specified ports if not already available.
+- Ensures backend + MySQL + RabbitMQ services are networked and running.
+
+> **📌 Prerequisite**: Docker must be installed and running on your system.
+
+---
+
+## 🛠️ Getting Started
+
+Here’s how to set up each part of the application.
+
+### ✅ Backend Setup (Spring Boot + Docker)
+
+> 📌 Prerequisites: Docker must be installed
+
+1. Clone the backend repo:
+
+   ```bash
+   git clone https://github.com/FinTech-Software/java_backend.git
+   cd java_backend
+   ```
+
+2. Run Docker Compose:
+
+   ```bash
+   docker compose up -d
+   ```
+
+This command builds the `java_backend` container and spins up all services (`Spring Boot`, `MySQL`, `RabbitMQ`) in one go.
+
+---
+
+### ✅ Frontend Setup (React + Vite + TypeScript)
+
+> 📌 Prerequisite: Node.js (v18+) installed
+
+1. Clone the frontend repo:
+
+   ```bash
+   git clone https://github.com/FinTech-Software/Online-Banking-Application-Frontend.git
+   cd Online-Banking-Application-Frontend
+   ```
+
+2. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+3. Start the development server:
+
+   ```bash
+   npm run dev
+   ```
+
+---
+
+### ✅ ML Model Setup
+
+The fraud detection model is containerized and built with Flask.
+Please refer to the dedicated [README](https://github.com/FinTech-Software/ML-Model-For-Fraud-Detection-and-Risk-Analysis-API/blob/main/README.md) for setup and usage instructions.
 
 ---
 
@@ -137,9 +223,5 @@ We developed a machine learning model capable of detecting fraudulent transactio
 - 🔗 Frontend Repo: [Online-Banking-Application-Frontend](https://github.com/FinTech-Software/Online-Banking-Application-Frontend)
 - 🔗 ML Fraud Detection: [ML Fraud API](https://github.com/FinTech-Software/ML-Model-For-Fraud-Detection-and-Risk-Analysis-API)
 - 🔗 System Design Workspace: [Design Docs](https://app.eraser.io/workspace/CXMV5NsTickZUMIarl8n?origin=share)
-
----
-
-> 📌 This is a final-year Advanced Java project, combining real-world technologies and a professional development workflow to simulate a modern FinTech banking solution.
 
 ---
